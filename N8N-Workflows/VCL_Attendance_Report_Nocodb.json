@@ -1,0 +1,361 @@
+{
+  "name": "VCL_Attendance_Report_Nocodb",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1w8H1dpUkukmG0ZfnWdx-p6m7bzzoE2Lc",
+          "mode": "list",
+          "cachedResultName": "VCL-Attendance",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1w8H1dpUkukmG0ZfnWdx-p6m7bzzoE2Lc"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        -848
+      ],
+      "id": "4505659f-0b61-482c-b087-dd889a2777c8",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1K9Lm9ZcDDz2g7RC",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1152,
+        -848
+      ],
+      "id": "c0e94283-ab1b-4061-99b6-af0607a9c97d",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1K9Lm9ZcDDz2g7RC",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -848
+      ],
+      "id": "df3478df-a5c5-4628-8a82-69b5fec7890f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "text": "=Date {{ $json.Date }}\nID {{ $json.ID }}\nName {{ $json.Name }}\nTime {{ $json.Time }}\nRemark {{ $json.Remark }}\nDepartment {{ $json.Department }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "date",
+              "description": "date",
+              "required": true
+            },
+            {
+              "name": "employee_id",
+              "description": "employee id",
+              "required": true
+            },
+            {
+              "name": "name",
+              "description": "name",
+              "required": true
+            },
+            {
+              "name": "time",
+              "description": "time",
+              "required": true
+            },
+            {
+              "name": "=remark",
+              "description": "=remark",
+              "required": true
+            },
+            {
+              "name": "status",
+              "description": "status",
+              "required": true
+            },
+            {
+              "name": "department",
+              "description": "demartment",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "=You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value.\n\nEach employee should have a date, employee_id, name, time, remark, department, status.\n\n# If time is after 9:35am then, status should be \"Late\" otherwise \"On-Time\". And if any considerable Remark found e.g: visit factory, reached ontime or forget to sign in then status should be \"On-Time\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        -848
+      ],
+      "id": "1edec101-6214-482e-901d-da4899eee7c1",
+      "name": "Information Extractor",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "create",
+        "projectId": "ptp5pub3chtultc",
+        "table": "ml0vbe6fr256zmh",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "=date",
+              "fieldValue": "={{ $json.date }}"
+            },
+            {
+              "fieldName": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldName": "employee_id",
+              "fieldValue": "={{ $json.employee_id }}"
+            },
+            {
+              "fieldName": "time",
+              "fieldValue": "={{ $json.time }}"
+            },
+            {
+              "fieldName": "remark",
+              "fieldValue": "={{ $json.remark }}"
+            },
+            {
+              "fieldName": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldName": "department",
+              "fieldValue": "={{ $json.department }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 3,
+      "position": [
+        -128,
+        -848
+      ],
+      "id": "81638612-8681-4ac7-9d0b-68d47d253eb4",
+      "name": "Create a row",
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "gSokWp2vgCbFEyfH",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c038a36-74b5-4670-b169-46c2f2fda641",
+              "name": "date",
+              "value": "={{ $json.output.date }}",
+              "type": "string"
+            },
+            {
+              "id": "d08351f0-9775-420f-9e14-ee80a403c35c",
+              "name": "employee_id",
+              "value": "={{ $json.output.employee_id }}",
+              "type": "string"
+            },
+            {
+              "id": "55284bf4-6d0a-4c26-a6b7-ced2d874d859",
+              "name": "name",
+              "value": "={{ $json.output.name }}",
+              "type": "string"
+            },
+            {
+              "id": "1077b9ad-b058-4efe-9f85-ecc39f632a43",
+              "name": "time",
+              "value": "={{ $json.output.time }}",
+              "type": "string"
+            },
+            {
+              "id": "2f17cf33-e4d4-4853-832b-05db1d183a3d",
+              "name": "remark",
+              "value": "={{ $json.output.remark }}",
+              "type": "string"
+            },
+            {
+              "id": "ab02049f-bba1-4a64-9f05-265b40f2278d",
+              "name": "status",
+              "value": "={{ $json.output.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ced8c4c6-937c-4e87-8b96-965f62e80eb0",
+              "name": "department",
+              "value": "={{ $json.output.department }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        -848
+      ],
+      "id": "3dd0745d-ac53-46a4-8a8b-b88eba77cc58",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        -624
+      ],
+      "id": "2a77d847-89d7-4f97-86d4-3cde3a6685b0",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "UQDSSyvFYDJtxus3",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Gsky0fZoFcZtOIAf"
+  },
+  "versionId": "66a73bd3-100d-4aa1-b1b8-2abc7eecdce8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "Gsky0fZoFcZtOIAf",
+  "tags": []
+}
