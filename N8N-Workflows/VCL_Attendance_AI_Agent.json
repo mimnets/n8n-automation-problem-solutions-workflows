@@ -1,0 +1,232 @@
+{
+  "name": "VCL_Attendance_AI_Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nMy name is VCL AI. How can I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -752,
+        -320
+      ],
+      "id": "5fc5379f-3c21-413b-9824-7acaef8d5ff1",
+      "name": "When chat message received",
+      "webhookId": "4a41c880-96d8-4d19-bb0d-8ed0c7a3e2c7"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are a helpful assistant and help to generate attendance report by collecting report from get_atten_report tool and profive response.\n\n- If daily_report trigger triggred and today’s date is {{$now}} and attendance data is available on get_atten_report tool, generate the report and send the report by using email_report tool.\n\n- Generate a attendance report.\n- Generate a executive report."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -416,
+        -224
+      ],
+      "id": "5a47ad01-0d87-45b5-9aff-6e6ff671f760",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -528,
+        0
+      ],
+      "id": "c3e87865-c1cc-4ef7-963f-8fa2f9237dee",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "UQDSSyvFYDJtxus3",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 500
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "46d116a3-8747-4d4d-8c8b-567c4436aab9",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "a5hAz6FEkpSq2dHv",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get many rows in NocoDB",
+        "authentication": "nocoDbApiToken",
+        "operation": "getAll",
+        "projectId": "ptp5pub3chtultc",
+        "table": "ml0vbe6fr256zmh",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.nocoDbTool",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "00795b44-8d53-49fa-ab01-e5d1f36db1ba",
+      "name": "get_atten_report",
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "gSokWp2vgCbFEyfH",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        -128
+      ],
+      "id": "e7709d5b-492a-40c5-b2c5-e9781d15f780",
+      "name": "daily_report"
+    },
+    {
+      "parameters": {
+        "sendTo": "hr@vclbd.net",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "48c9fa64-72fc-4831-977c-26eb56872fcb",
+      "name": "email_report",
+      "webhookId": "9b304ee9-d6b5-435d-911f-1c3ef8dd3f9e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6vZzrJwx8YynW3QX",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_atten_report": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "daily_report": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "email_report": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "HeysJASL6wRoblHS"
+  },
+  "versionId": "45509aab-800a-41fe-82d3-28a11406ac12",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "HeysJASL6wRoblHS",
+  "tags": []
+}
